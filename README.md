@@ -1,67 +1,49 @@
-#screen_lim by Barben360
+#VPN Unlimited to Synology by Barben360
 
-##Created 09-22-2017 - Confirmed working on Debian 9 Stretch
+##Created 03-13-2017 - Confirmed working on Synology DS412J, DS216+ and DS716+II
 
-When you are doing intensive simulation on large sets of inputs using your CPU, you want all its cores to be used. Several possibilities are then possible:
-- Your code is multi-threaded (e.g, using OpenMP) and you can then run sequentially all your simulations and all the cores will be used. Best choice ! But not always that easy to code efficiently and fast.
-- Your code is not multi-threaded, and the only way to run your tests using all your cores is to run several simulations at a time. If you have an X-core processors, you can either:
-	- Run all your simulations in the same time. For this, you will for instance run as many instances of screen as you have simulations. The CPU time will be shared between your execution instances, and you will globally lose performance. Moreover, you will potentially spend a lot of RAM, and if you want to evaluate the time performance of your simulation, the numbers you'll get won't be representative at all since you don't control how your CPU splits its time among running programs.
-	- Manually run as many simulations as you have cores, and wait for one to be finished, staying in front of your PC, to run a new one. You will loose time monitoring manually, you will loose time between two executions. However, the evaluation of time performance you can make will be representative.
-	- You just run everything sequentially. This is the simplest way, but your simulations will be X times longer.
-	
-The Python script proposed here simply allows you to run all your instances of simulations in the same time, but only X of them will be allowed to be started in the same time. Therefore, if you have 100 programs to run and a 4-core processor, only the 4 first will start, one on each core. When the first of them will be finished, number 5 will start, then number 6, etc.
-This way, all your cores will be fully used 100% of the time, while each CPU core doesn't have to be shared between several programs. Therefore, you will be able to time your simulations with no interference.
+These scripts are made to automate the installation of VPN Unlimited OpenVPN configurations on a Synology DiskStation.
+It also adds a "P2P" flag in the VPN connection names corresponding to VPN Unlimited servers allowing P2P (US-California 1, Canada-Ontario, Romania, Luxembourg and France).
+There is no risk to use the scripts as a backup is done. The worst thing that could happen to you could be loosing previously configured openvpn connections. But that would be your fault since that would mean you have deleted your backup ! ;-)
 
 ##Prerequisites:
 
-- Python 3
-- screen
+- A paid VPN Unlimited access.
+- Your original OpenVPN files. To get them, email support@keepsolid.com.<br />
+Template:<br />
+"Hello,<br />
+In order to use your services, I would like to get OpenVPN configuration files.<br />
+Can you send them to me ?<br />
+Best regards,<br />
+\<yourname\>"<br />
+You should receive them quickly (it took 30 minutes when I asked them for myself)
+- A Synology DiskStation with Python3 installed. It is not pre-installed so just find it in Synology Package Center.
+- Remote SSH connection parametered on your DiskStation
+- A computer on your local network able to use SSH (for Windows, use PuTTY)
+- UDP port 1194 opened on your internet router
+Note: you need to be admin on your DiskStation
 
-##How to setup the script:
-Just put it in your path... what else?
 
-##How to use the script:
-Here is the help
-```
-usage: screen_lim [-h] [-n NAME] [-m MAX_SCREENS] [-t WAIT_TIME] [-M] command
+##How to use Setup script:
 
-Runs command in background screen when a computation core is available. Be
-careful: this command is blocking, meaning the remaining of the program it is
-called in will not run until a screen instance has been able to be be
-launched. Note: only the "command" argument is necessary.
+- Put the "VPNUnlimited2Syno" folder somewhere on your DiskStation (e.g. your home folder) the way you want
+- Put all the VPN Unlimited ".ovpn" files you want to install in the "./VPNUnlimited2Syno/ovpn_files" folder
+- With your SSH-ready computer, connect to your DiskStation ("ssh \<username\>@\<diskstation_name\>"):
+	- Go to "VPNUnlimited2Syno" folder
+	- Run "./Setup" as an administrator (either the script won't be able to write in ovpn configurations)
+	- The installation only takes a few microseconds. You can then exit the SSH connexion.
+- Go to your Control Panel on Synology's web interface using your usual web browser.
+- Go to "Network/Network interface".
+- You should see a new list of VPN connections "VPN - VPNUnlimited_\<location\>" sometimes ending with "_P2P".
+- To connect any of these VPN connections, just right click, "connect". You are connected !
+Note: You can modify parameters performing right click, "modify". Just remember to leave "Username" and "Password" selections empty.
 
-positional arguments:
-  command               Command to be run in background screen.
+##How to use Restore script:
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -n NAME, --name NAME  Fancy name of the screen to create.
-  -m MAX_SCREENS, --max_screens MAX_SCREENS
-                        Force number of maximum screens to be run in the same
-                        time. By default, the number of cores of the CPU is
-                        used.
-  -t WAIT_TIME, --wait_time WAIT_TIME
-                        Force the time between two attempts of starting a
-                        screen instance (in seconds)
-  -M, --major           Adds 1 available slot to the default (or forced one,
-                        but then it is useless). This is useful if the command
-                        is run from a screen which is not supposed to be
-                        counted in the total number of screens (low impact on
-                        processor, only to manage other screens).
-```
+When running "Setup" script, a "syno_save" folder is created, and a subfolder is added each time you run the script.
+Each subfolder was named by current date and time when you ran the "Setup" script.
+If you want to restore the ovpn configuration to any of its previous version:
+- Rename the subfolder you want to restore using the name "RESTORE" (case sensitive)
+- Using the same process as "Setup" script, run "./Restore" as an administrator
 
-So for instance, let's suppose you want to run an instance of a simulation started by a script "simulation.sh". Then you just have to run:
-```
-screen_lim "simulation.sh"
-```
-The number of cores of your computer is automatically resolved so no worries.
-
-Now if you want to run the same script, give the associated screen a fancy name "SIM", and wait for 2 seconds only (instead of 5 by default) between two attempts of running a same script, and if you want 1 core in your 4-core processor to be left unused (so to use only 3 cores):
-```
-screen_lim "simulation.sh" -n "SIM" -m 3 -t 5.0
-```
-
-All you have to do to run your 100 simulations is running this line 100 times in a script, applied to all your simulations.
-You can choose the same fancy name for all your simulations, that won't be an issue.
-
-Hope you'll enjoy !
+Thank you to *cuzzi* for the original client ovpn script.
